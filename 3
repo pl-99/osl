@@ -1,0 +1,189 @@
+1. Aim
+To implement the Producer-Consumer problem using threads, semaphores and mutex for synchronization.
+2. Code Explanation
+Step 1: Header Files
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+
+- stdio.h – Input/output.
+- stdlib.h – General functions.
+- pthread.h – Thread creation.
+- semaphore.h – Semaphore operations.
+- unistd.h – sleep() function.
+Step 2: Buffer Declaration
+#define BUFFER_SIZE 5
+
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
+
+
+- BUFFER_SIZE 5 – Buffer can store 5 items.
+- buffer[] – Stores produced items.
+- in – Position where producer inserts item.
+- out – Position where consumer removes item.
+Step 3: Semaphore and Mutex
+sem_t empty;
+sem_t full;
+
+pthread_mutex_t mutex;
+
+
+- empty – Counts empty spaces.
+- full – Counts filled spaces.
+- mutex – Protects shared buffer from simultaneous access.
+Step 4: Producer Function
+for (int i = 1; i <= 10; i++)
+{
+    item = i;
+
+    sem_wait(&empty);
+    pthread_mutex_lock(&mutex);
+
+    buffer[in] = item;
+    printf("Producer produced: %d\n", item);
+
+    in = (in + 1) % BUFFER_SIZE;
+
+    pthread_mutex_unlock(&mutex);
+    sem_post(&full);
+
+    sleep(1);
+}
+
+
+Explanation:
+- for loop – Produces 10 items (1 to 10).
+- item = i – Assigns item.
+- sem_wait(&empty) – Checks for empty space.
+- pthread_mutex_lock() – Locks buffer.
+- buffer[in] = item – Inserts item.
+- in = (in + 1) % BUFFER_SIZE – Moves to next position circularly.
+- pthread_mutex_unlock() – Unlocks buffer.
+- sem_post(&full) – Increases filled-space count.
+- sleep(1) – Waits 1 second.
+Step 5: Consumer Function
+for (int i = 1; i <= 10; i++)
+{
+    sem_wait(&full);
+    pthread_mutex_lock(&mutex);
+
+    item = buffer[out];
+
+    printf("Consumer consumed: %d\n", item);
+
+    out = (out + 1) % BUFFER_SIZE;
+
+    pthread_mutex_unlock(&mutex);
+    sem_post(&empty);
+
+    sleep(2);
+}
+
+
+Explanation:
+- sem_wait(&full) – Waits until an item is available.
+- pthread_mutex_lock() – Locks buffer.
+- item = buffer[out] – Takes item from buffer.
+- printf() – Displays consumed item.
+- out = (out + 1) % BUFFER_SIZE – Moves to next position.
+- pthread_mutex_unlock() – Unlocks buffer.
+- sem_post(&empty) – Increases empty-space count.
+- sleep(2) – Waits 2 seconds.
+Step 6: Main Function
+pthread_t producer_thread, consumer_thread;
+
+sem_init(&empty, 0, BUFFER_SIZE);
+sem_init(&full, 0, 0);
+
+pthread_mutex_init(&mutex, NULL);
+
+
+- pthread_t – Declares two threads.
+- sem_init(&empty, 0, BUFFER_SIZE) – Initially 5 empty spaces.
+- sem_init(&full, 0, 0) – Initially 0 filled spaces.
+- pthread_mutex_init() – Initializes mutex.
+Step 7: Create Threads
+pthread_create(&producer_thread, NULL, producer, NULL);
+
+pthread_create(&consumer_thread, NULL, consumer, NULL);
+
+
+Creates producer and consumer threads.
+
+Step 8: Wait for Threads
+pthread_join(producer_thread, NULL);
+pthread_join(consumer_thread, NULL);
+
+
+Main function waits until both threads finish execution.
+
+Step 9: Destroy Synchronization Objects
+sem_destroy(&empty);
+sem_destroy(&full);
+pthread_mutex_destroy(&mutex);
+
+
+Destroys semaphores and mutex after execution.
+
+3. Output Explanation
+SAMPLE TERMINAL OUTPUT
+Producer produced: 1
+Consumer consumed: 1
+
+Producer produced: 2
+Producer produced: 3
+Consumer consumed: 2
+
+Producer produced: 4
+Producer produced: 5
+Consumer consumed: 3
+
+Producer produced: 6
+Consumer consumed: 4
+
+Producer produced: 7
+Producer produced: 8
+Consumer consumed: 5
+
+Producer produced: 9
+Consumer consumed: 6
+
+Producer produced: 10
+Consumer consumed: 7
+Consumer consumed: 8
+Consumer consumed: 9
+Consumer consumed: 10
+
+
+Illustrative output. Actual order and timing may differ because threads execute concurrently.
+
+Output kaise aaya?
+1. Producer creates items from 1 to 10.
+2. Items are stored in the buffer.
+3. Consumer takes items from the buffer.
+4. Producer waits if the buffer is full.
+5. Consumer waits if the buffer is empty.
+6. Mutex prevents both threads from accessing the shared buffer simultaneously.
+7. Finally, all 10 items are produced and consumed.
+4. Important Functions
+Function	Meaning
+pthread_create()	Creates thread
+pthread_join()	Waits for thread
+sem_init()	Initializes semaphore
+sem_wait()	Decreases semaphore / waits
+sem_post()	Increases semaphore
+pthread_mutex_lock()	Locks shared resource
+pthread_mutex_unlock()	Unlocks shared resource
+sleep()	Pauses execution
+sem_destroy()	Destroys semaphore
+
+5. Compile and Run
+gcc producer.c -o producer -pthread
+./producer
+
+
+Main concept: Producer adds items, Consumer removes items, Semaphore manages empty/full spaces, and Mutex protects the shared buffer.
