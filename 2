@@ -1,0 +1,127 @@
+1. Aim
+To create a child process using fork() system call. The parent process sorts an array in ascending order and the child process sorts it in descending order.
+2. Code Explanation
+Step 1: Header Files
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+
+- stdio.h – Input/output.
+- stdlib.h – exit() function.
+- unistd.h – fork(), getpid(), getppid().
+- sys/wait.h – wait() function.
+Step 2: Ascending Sorting Function
+if (arr[j] > arr[j + 1])
+{
+    temp = arr[j];
+    arr[j] = arr[j + 1];
+    arr[j + 1] = temp;
+}
+
+
+- Compares two adjacent elements.
+- If left element is greater, swaps them.
+- Arranges numbers from smallest to largest.
+Step 3: Descending Sorting Function
+if (arr[j] < arr[j + 1])
+
+
+- Compares two adjacent elements.
+- If left element is smaller, swaps them.
+- Arranges numbers from largest to smallest.
+Step 4: Input
+scanf("%d", &n);
+
+for (i = 0; i < n; i++)
+    scanf("%d", &arr[i]);
+
+
+- n – Number of integers.
+- arr[] – Stores input numbers.
+- for loop – Takes all array elements.
+Step 5: Fork System Call
+pid = fork();
+
+
+Most Important
+Creates a new child process.
+- pid < 0 – Fork failed.
+- pid == 0 – Child process.
+- pid > 0 – Parent process.
+Step 6: Child Process
+if (pid == 0)
+{
+    getpid();
+    getppid();
+    sortDescending(arr, n);
+    display(arr, n);
+    exit(0);
+}
+
+
+- getpid() – Child process ID.
+- getppid() – Parent process ID.
+- sortDescending() – Sorts array in descending order.
+- display() – Displays sorted array.
+- exit(0) – Terminates child process.
+Step 7: Parent Process
+else
+{
+    getpid();
+    sortAscending(arr, n);
+    display(arr, n);
+    wait(NULL);
+}
+
+
+- getpid() – Parent process ID.
+- sortAscending() – Sorts array in ascending order.
+- display() – Displays sorted array.
+- wait(NULL) – Parent waits for child process to finish.
+3. Output Explanation
+Input:
+Enter number of integers: 5
+Enter 5 integers:
+5 2 8 1 9
+
+
+Output:
+--- Parent Process ---
+Parent PID : 2500
+Child PID : 2501
+
+Parent sorted array (Ascending):
+1 2 5 8 9
+
+--- Child Process ---
+Child PID : 2501
+Parent PID : 2500
+
+Child sorted array (Descending):
+9 8 5 2 1
+
+Parent: Child process has completed.
+Parent process terminating...
+
+
+PID numbers and output order are illustrative; actual values and scheduling may differ.
+Output kaise aaya?
+1. User enters 5 numbers: 5 2 8 1 9.
+2. fork() creates child process.
+3. Parent sorts numbers in ascending order: 1 2 5 8 9.
+4. Child sorts numbers in descending order: 9 8 5 2 1.
+5. wait(NULL) makes parent wait for child.
+6. After child finishes, parent terminates.
+4. Important Functions
+Function	Meaning
+fork()	Creates child process
+getpid()	Returns current process ID
+getppid()	Returns parent process ID
+wait(NULL)	Waits for child
+exit(0)	Terminates process
+sortAscending()	Ascending sorting
+sortDescending()	Descending sorting
+display()	Displays array
