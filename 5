@@ -1,0 +1,225 @@
+Practical 5 – Deadlock Avoidance Using Banker's Algorithm
+1. Aim
+To implement Banker's Algorithm for deadlock avoidance and check whether the system is in a safe state or not.
+2. Code Explanation
+Step 1: Header File
+#include <stdio.h>
+
+
+- stdio.h – Used for input and output operations.
+
+Step 2: Input Number of Processes and Resources
+int n, m;
+
+printf("Enter number of processes: ");
+scanf("%d", &n);
+
+printf("Enter number of resources: ");
+scanf("%d", &m);
+
+
+- n – Number of processes.
+- m – Number of resources.
+Step 3: Declare Matrices and Arrays
+int allocation[n][m], max[n][m], need[n][m], available[m];
+
+int finish[n], safeSequence[n];
+
+
+- allocation – Resources currently allocated to processes.
+- max – Maximum resources required.
+- need – Remaining resources required.
+- available – Available resources.
+- finish – Checks whether process is completed.
+- safeSequence – Stores safe execution order.
+Step 4: Input Allocation Matrix
+for (int i = 0; i < n; i++)
+{
+    for (int j = 0; j < m; j++)
+    {
+        scanf("%d", &allocation[i][j]);
+    }
+}
+
+
+Takes currently allocated resources for each process.
+
+Step 5: Input Maximum Matrix
+for (int i = 0; i < n; i++)
+{
+    for (int j = 0; j < m; j++)
+    {
+        scanf("%d", &max[i][j]);
+    }
+}
+
+
+Takes the maximum resource requirement of each process.
+
+Step 6: Input Available Resources
+for (int j = 0; j < m; j++)
+{
+    scanf("%d", &available[j]);
+}
+
+
+Stores currently available resources.
+
+Step 7: Calculate Need Matrix
+Most Important
+for (int i = 0; i < n; i++)
+{
+    finish[i] = 0;
+
+    for (int j = 0; j < m; j++)
+    {
+        need[i][j] = max[i][j] - allocation[i][j];
+    }
+}
+
+
+- finish[i] = 0 – Process is not completed.
+- need = max - allocation – Calculates remaining resources required.
+Formula:
+\[
+Need = Max - Allocation
+\]
+
+Step 8: Initialize Count
+int count = 0;
+
+
+Stores the number of completed processes.
+
+Step 9: Check Safe State
+while (count < n)
+{
+    int found = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (finish[i] == 0)
+
+
+- while – Runs until all processes complete.
+- count < n – Checks remaining processes.
+- found = 0 – Initially no process is found.
+- finish[i] == 0 – Checks unfinished process.
+Step 10: Check Need and Available
+for (j = 0; j < m; j++)
+{
+    if (need[i][j] > available[j])
+    {
+        break;
+    }
+}
+
+
+Checks whether the process has enough available resources.
+- If Need > Available, process cannot execute.
+- If all resources are sufficient, process can execute.
+Step 11: Execute Process
+if (j == m)
+{
+    for (j = 0; j < m; j++)
+    {
+        available[j] += allocation[i][j];
+    }
+
+    safeSequence[count++] = i;
+    finish[i] = 1;
+    found = 1;
+}
+
+
+- j == m – All resource requirements are satisfied.
+- available += allocation – Releases allocated resources after process completion.
+- safeSequence – Stores process number.
+- count++ – Increases completed process count.
+- finish[i] = 1 – Marks process completed.
+- found = 1 – Process successfully executed.
+Step 12: Check Unsafe State
+if (found == 0)
+{
+    printf("System is NOT in a safe state.");
+    return 0;
+}
+
+
+If no unfinished process can execute, system is not in a safe state.
+
+Step 13: Display Safe Sequence
+printf("\nSystem is in a SAFE state.\n");
+
+printf("Safe Sequence: ");
+
+for (int i = 0; i < n; i++)
+{
+    printf("P%d ", safeSequence[i]);
+}
+
+
+Displays safe state and the order in which processes can execute.
+
+3. Output Explanation
+Example Input
+Suppose:
+- Processes = 5
+- Resources = 4
+The program takes Allocation Matrix, Max Matrix and Available Resources from the user.
+Output Calculation
+The main calculation is:
+\[
+Need = Max - Allocation
+\]
+
+Suppose a process has:
+Resource	Value
+Max	7
+Allocation	3
+Need	4
+
+So, remaining requirement = 7 - 3 = 4.
+
+If Available resources are sufficient, that process executes.
+
+After execution, its allocated resources are returned to Available.
+Safe State
+Sample Output
+System is in a SAFE state.
+
+Safe Sequence: P1 P3 P4 P0 P2
+
+
+Illustrative sequence only. Actual sequence depends on the input matrices and available resources.
+
+Output kaise aaya?
+1. Program takes process and resource counts.
+2. Allocation and Max matrices are entered.
+3. Available resources are entered.
+4. Need Matrix is calculated.
+5. Program checks which process has sufficient resources.
+6. That process executes and releases its allocated resources.
+7. The process number is added to Safe Sequence.
+8. This repeats until all processes finish.
+9. If all processes finish, system is SAFE.
+10. If no process can execute, system is NOT SAFE.
+4. Important Variables and Functions
+Variable	Meaning
+n	Number of processes
+m	Number of resources
+allocation	Allocated resources
+max	Maximum requirement
+need	Remaining requirement
+available	Available resources
+finish	Process completion status
+safeSequence	Safe execution order
+count	Completed process count
+found	Checks if process can execute
+
+5. Main Formula
+\[
+\boxed{Need = Max - Allocation}
+\]
+
+Main concept: Banker's Algorithm checks resource availability before allowing a process to execute. It finds a safe sequence to avoid deadlock.
