@@ -1,0 +1,202 @@
+Practical 7 – Inter Process Communication (IPC) Using Pipes
+1. Aim
+To implement Inter Process Communication between Parent and Child processes using Pipes.
+2. Code Explanation
+This program uses two pipes for two-way communication between Parent and Child processes.
+- Pipe 1 – Parent sends file path to Child.
+- Pipe 2 – Child sends file contents to Parent.
+Step 1: Header Files
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+
+- stdio.h – Input/output.
+- stdlib.h – Exit function.
+- unistd.h – pipe(), fork(), read(), write(), close().
+- string.h – String operations.
+- sys/wait.h – wait() function.
+Step 2: Declare Variables
+int pipe1[2], pipe2[2];
+pid_t pid;
+char pathname[100];
+char buffer[1024];
+int n;
+
+
+- pipe1 – First communication pipe.
+- pipe2 – Second communication pipe.
+- pid – Stores process ID.
+- pathname – Stores file path.
+- buffer – Stores file contents.
+- n – Stores number of bytes read.
+Step 3: Create Two Pipes
+Important
+if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
+{
+    perror("pipe");
+    exit(1);
+}
+
+
+- pipe() – Creates communication channel.
+- pipe1 – Parent to Child.
+- pipe2 – Child to Parent.
+- -1 – Indicates pipe creation failure.
+Step 4: Create Child Process
+pid = fork();
+
+
+Creates a child process.
+- pid < 0 – Fork failed.
+- pid > 0 – Parent process.
+- pid == 0 – Child process.
+A. Parent Process
+Step 5: Close Unused Pipe Ends
+close(pipe1[0]);
+close(pipe2[1]);
+
+
+- pipe1[0] – Read end, not required by Parent.
+- pipe2[1] – Write end, not required by Parent.
+Step 6: Enter File Path
+printf("Enter the pathname of the file: ");
+scanf("%s", pathname);
+
+
+Takes the filename from the user.
+
+Step 7: Send Path to Child
+write(pipe1[1], pathname, strlen(pathname) + 1);
+close(pipe1[1]);
+
+
+- write() – Sends pathname to Child.
+- pipe1[1] – Write end of first pipe.
+- strlen() + 1 – Includes null character.
+- close() – Closes writing end.
+Step 8: Receive File Contents
+printf("\nContents of the file:\n");
+
+while ((n = read(pipe2[0], buffer, sizeof(buffer) - 1)) > 0)
+{
+    buffer[n] = '\0';
+    printf("%s", buffer);
+}
+
+
+- read() – Receives file contents.
+- buffer – Stores received data.
+- buffer[n] = '\0' – Adds string termination.
+- printf() – Displays file contents.
+Step 9: Wait for Child
+close(pipe2[0]);
+wait(NULL);
+
+
+- close() – Closes read end.
+- wait(NULL) – Parent waits for Child to finish.
+B. Child Process
+Step 10: Close Unused Pipe Ends
+close(pipe1[1]);
+close(pipe2[0]);
+
+
+- Child does not need pipe1 write end.
+- Child does not need pipe2 read end.
+Step 11: Receive File Path
+read(pipe1[0], pathname, sizeof(pathname));
+close(pipe1[0]);
+
+
+Receives pathname sent by Parent.
+
+Step 12: Open File
+fp = fopen(pathname, "r");
+
+
+- fopen() – Opens file.
+- "r" – Read mode.
+- fp – File pointer.
+If file cannot open:
+if (fp == NULL)
+{
+    char *msg = "Error: File cannot be opened.\n";
+    write(pipe2[1], msg, strlen(msg));
+    close(pipe2[1]);
+    exit(1);
+}
+
+
+Displays error message and sends it to Parent.
+
+Step 13: Read and Send File Contents
+while (fgets(buffer, sizeof(buffer), fp) != NULL)
+{
+    write(pipe2[1], buffer, strlen(buffer));
+}
+
+
+- fgets() – Reads file line by line.
+- buffer – Stores each line.
+- write() – Sends line to Parent.
+- NULL – Indicates end of file.
+Step 14: Close File and Exit
+fclose(fp);
+close(pipe2[1]);
+exit(0);
+
+
+- fclose() – Closes file.
+- close() – Closes pipe.
+- exit(0) – Terminates Child successfully.
+
+3. Output Explanation
+Suppose a file named demo3.txt contains:
+Hi welcome to operating System.
+Maja nahi bhai !
+
+
+TERMINAL OUTPUT
+Enter the pathname of the file:
+demo3.txt
+
+Contents of the file:
+
+Hi welcome to operating System.
+Maja nahi bhai !
+
+
+
+Output kaise aaya?
+1. Parent and Child processes are created using fork().
+2. Parent asks for the file pathname.
+3. User enters demo3.txt.
+4. Parent sends the pathname through pipe1.
+5. Child receives the pathname.
+6. Child opens demo3.txt in read mode.
+7. Child reads file contents using fgets().
+8. Child sends contents through pipe2.
+9. Parent receives and displays the file contents.
+10. Parent waits for Child to finish.
+4. Important Functions
+Function	Meaning
+pipe()	Creates pipe
+fork()	Creates child process
+read()	Reads data
+write()	Sends data
+close()	Closes pipe
+fopen()	Opens file
+fgets()	Reads file line by line
+fclose()	Closes file
+wait()	Waits for child
+exit()	Terminates process
+
+5. Compile and Run
+gcc pipes.c -o pipes
+./pipes
+
+
+Main concept: Parent sends the file path to Child using the first pipe. Child reads the file and sends its contents back to Parent using the second pipe.
