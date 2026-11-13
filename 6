@@ -1,0 +1,204 @@
+Practical 6 – Inter Process Communication (IPC) Using FIFO
+1. Aim
+To implement Inter Process Communication between Client and Server using FIFO (Named Pipe).
+2. Code Explanation
+This practical contains two programs:
+1. Client Code
+2. Server Code
+Both communicate using two FIFO files: fifo6.txt and fifo7.txt.
+A. Client Code
+Step 1: Header Files
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<string.h>
+
+
+- stdio.h – Input/output.
+- stdlib.h – Exit functions.
+- sys/stat.h – FIFO creation.
+- unistd.h – Read, write and close.
+- fcntl.h – File opening modes.
+- string.h – String operations.
+Step 2: Create FIFO Files
+int code6 = mkfifo("fifo6.txt",0666);
+int code7 = mkfifo("fifo7.txt",0666);
+
+
+- mkfifo() – Creates named pipes.
+- fifo6.txt – Server sends message to Client.
+- fifo7.txt – Client sends result to Server.
+- 0666 – Read and write permissions.
+Step 3: Open FIFO Files
+int fd = open("fifo6.txt", O_RDONLY);
+int fd2 = open("fifo7.txt", O_WRONLY);
+
+
+- O_RDONLY – Opens FIFO for reading.
+- O_WRONLY – Opens FIFO for writing.
+- fd – Reads message from server.
+- fd2 – Sends result to server.
+Step 4: Read Message
+res = read(fd, &Len, 1);
+
+read(fd, stringBuffer, Len);
+stringBuffer[(int)Len] = 0;
+
+printf("Client Received: %s\n", stringBuffer);
+
+
+- read() – Receives data from FIFO.
+- Len – Stores message length.
+- stringBuffer – Stores received message.
+- printf() – Displays message.
+Step 5: Count Words and Lines
+while(stringBuffer[j]!='\0')
+{
+    char ch = stringBuffer[j];
+
+    if((ch==' ')||(ch=='\n'))
+    {
+        w++;
+
+        if(ch=='\n')
+            line++;
+    }
+
+    j++;
+}
+
+
+- while – Checks every character.
+- j – Character position.
+- w – Counts spaces and newline characters.
+- line – Counts newline characters.
+- '\0' – End of string.
+Step 6: Prepare Result
+sprintf(str1," No.of Words : %d:::", w);
+sprintf(str2," No.of Charecters: %d:::",(j-1));
+sprintf(str3," No.of Lines: %d",line);
+
+
+- sprintf() – Stores formatted result in strings.
+- w – Word count as calculated by the code.
+- j-1 – Character count excluding the null terminator.
+- line – Line count.
+Step 7: Send Result to Server
+write(fd2, &LC, 1);
+write(fd2, strMessage, strlen(strMessage));
+
+
+- write() – Sends data through FIFO.
+- fd2 – FIFO writing descriptor.
+- strMessage – Contains word, character and line counts.
+
+B. Server Code
+Step 1: Open FIFO Files
+int fd = open("fifo6.txt", O_WRONLY);
+int fd2 = open("fifo7.txt", O_RDONLY);
+
+
+- fd – Sends message to Client.
+- fd2 – Receives result from Client.
+Step 2: Enter Message
+fgets(strMessage, 100, stdin);
+
+
+- Takes message from the user.
+- Stores message in strMessage.
+- Maximum input size is 99 characters plus null terminator.
+Step 3: Calculate Length
+char L = (char) strlen(strMessage);
+
+
+- strlen() – Calculates string length.
+- L – Stores message length.
+Step 4: Send Message
+write(fd, &L, 1);
+write(fd, strMessage, strlen(strMessage));
+
+
+Sends message length and message to Client using FIFO.
+
+Step 5: Receive Client Result
+res = read(fd2, &len2, 1);
+
+read(fd2, stringBuffer, 5000);
+
+printf("Server Received: %s\n", stringBuffer);
+
+
+- read() – Receives Client's result.
+- stringBuffer – Stores received information.
+- printf() – Displays the result.
+
+3. Output Explanation
+Server Terminal
+Server
+FIFO OPEN
+
+Enter the Message to be passed:
+Hello Operating System
+
+
+
+Client Terminal
+Client - Listening
+
+FIFO OPEN
+
+Client Received: Hello Operating System
+
+String:
+No.of Words : 3
+No.of Characters: 22
+No.of Lines: 1
+
+
+
+Server Terminal – Received Result
+Server Received:
+No.of Words : 3
+No.of Characters: 22
+No.of Lines: 1
+
+
+Illustrative output. The actual word and line counts depend on the entered message and this program's counting logic.
+
+Output kaise aaya?
+1. Server and Client create/open FIFO files.
+2. Server enters a message.
+3. Server sends message to Client through fifo6.txt.
+4. Client receives the message.
+5. Client counts words, characters and lines.
+6. Client sends the result through fifo7.txt.
+7. Server receives and displays the result.
+4. Important Functions
+Function	Meaning
+mkfifo()	Creates named pipe
+open()	Opens FIFO
+read()	Reads data
+write()	Sends data
+close()	Closes FIFO
+strlen()	Calculates string length
+sprintf()	Formats string
+strcat()	Joins strings
+memset()	Initializes memory
+
+5. Compile and Run
+Run Client and Server in separate terminals.
+
+Terminal 1 – Client
+gcc client.c -o client
+./client
+
+
+Terminal 2 – Server
+gcc server.c -o server
+./server
+
+
+Main concept: FIFO is a named pipe used for communication between two processes. Server sends a message, Client counts words, characters and lines, and sends the result back.
