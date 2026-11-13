@@ -1,0 +1,185 @@
+1. Aim
+To implement the Dining Philosopher problem using threads and mutex locks to prevent deadlock.
+2. Code Explanation
+Step 1: Header Files
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+
+- stdio.h – Input/output.
+- stdlib.h – Memory allocation and free.
+- pthread.h – Thread creation and mutex.
+- unistd.h – sleep() function.
+Step 2: Define Philosophers and Forks
+#define NUM_PHILOSOPHERS 5
+#define NUM_FORKS 5
+
+pthread_t philosophers[NUM_PHILOSOPHERS];
+pthread_mutex_t forks[NUM_FORKS];
+
+
+- NUM_PHILOSOPHERS 5 – Total 5 philosophers.
+- NUM_FORKS 5 – Total 5 forks.
+- pthread_t – Stores philosopher threads.
+- pthread_mutex_t – Stores fork locks.
+Step 3: Philosopher Function
+void* philosopher_lifecycle(void* num)
+{
+    int id = (int)num;
+
+    int left_fork = id;
+    int right_fork = (id + 1) % NUM_PHILOSOPHERS;
+
+
+- id – Philosopher number (0 to 4).
+- left_fork = id – Assigns left fork.
+- right_fork = (id + 1) % 5 – Assigns right fork.
+- % – Modulus operator, keeps fork number within 0 to 4.
+Step 4: Thinking and Eating Loop
+for (int i = 0; i < 3; i++)
+{
+    printf("Philosopher %d is thinking.\n", id + 1);
+    sleep(1);
+
+    printf("Philosopher %d is hungry and trying to pick up forks.\n", id + 1);
+}
+
+
+- Loop executes 3 times.
+- Philosopher thinks for 1 second.
+- After thinking, philosopher becomes hungry.
+Step 5: Deadlock Prevention Logic
+Most Important
+if (id == NUM_PHILOSOPHERS - 1)
+{
+    pthread_mutex_lock(&forks[right_fork]);
+    pthread_mutex_lock(&forks[left_fork]);
+}
+else
+{
+    pthread_mutex_lock(&forks[left_fork]);
+    pthread_mutex_lock(&forks[right_fork]);
+}
+
+
+- Last philosopher picks up right fork first.
+- Other philosophers pick up left fork first.
+- Different fork-picking order prevents circular waiting and avoids deadlock.
+Step 6: Eating
+printf("Philosopher %d is EATING.\n", id + 1);
+sleep(2);
+
+
+- Displays that philosopher is eating.
+- sleep(2) – Eating takes 2 seconds.
+Step 7: Put Down Forks
+pthread_mutex_unlock(&forks[left_fork]);
+pthread_mutex_unlock(&forks[right_fork]);
+
+printf("Philosopher %d finished eating and put down forks.\n", id + 1);
+
+
+- pthread_mutex_unlock() – Releases fork locks.
+- Other philosophers can now use those forks.
+Step 8: Free Memory
+free(num);
+return NULL;
+
+
+- free(num) – Releases dynamically allocated memory.
+- return NULL – Ends philosopher thread.
+Step 9: Main Function – Initialize Mutex
+for (int i = 0; i < NUM_FORKS; i++)
+{
+    pthread_mutex_init(&forks[i], NULL);
+}
+
+
+Initializes all 5 fork mutexes.
+
+Step 10: Create Philosopher Threads
+for (int i = 0; i < NUM_PHILOSOPHERS; i++)
+{
+    int* id = malloc(sizeof(int));
+    *id = i;
+
+    pthread_create(&philosophers[i], NULL, philosopher_lifecycle, id);
+}
+
+
+- malloc() – Allocates memory for philosopher ID.
+- pthread_create() – Creates philosopher threads.
+- Each thread executes philosopher_lifecycle().
+Step 11: Wait for Threads
+for (int i = 0; i < NUM_PHILOSOPHERS; i++)
+{
+    pthread_join(philosophers[i], NULL);
+}
+
+
+Main function waits for all 5 philosophers to finish.
+
+Step 12: Destroy Mutex
+for (int i = 0; i < NUM_FORKS; i++)
+{
+    pthread_mutex_destroy(&forks[i]);
+}
+
+printf("Simulation completed successfully.\n");
+
+
+Destroys all mutex locks and displays completion message.
+
+3. Output Explanation
+SAMPLE TERMINAL OUTPUT
+Philosopher 1 is thinking.
+Philosopher 2 is thinking.
+Philosopher 3 is thinking.
+Philosopher 4 is thinking.
+Philosopher 5 is thinking.
+
+Philosopher 1 is hungry and trying to pick up forks.
+Philosopher 1 is EATING.
+
+Philosopher 1 finished eating and put down forks.
+
+Philosopher 2 is EATING.
+Philosopher 2 finished eating and put down forks.
+
+...
+
+Simulation completed successfully.
+
+
+Illustrative output only. Actual order depends on thread scheduling.
+
+Output kaise aaya?
+1. Five philosophers are created.
+2. Initially, all philosophers start thinking.
+3. After 1 second, they become hungry.
+4. Each philosopher tries to acquire two forks.
+5. Mutex ensures only one philosopher can hold a particular fork at a time.
+6. Philosopher eats for 2 seconds.
+7. After eating, both forks are released.
+8. Each philosopher repeats the process 3 times.
+9. Finally, all threads finish and simulation completes.
+4. Important Functions
+Function	Meaning
+pthread_create()	Creates thread
+pthread_join()	Waits for thread
+pthread_mutex_init()	Initializes mutex
+pthread_mutex_lock()	Locks fork
+pthread_mutex_unlock()	Releases fork
+pthread_mutex_destroy()	Destroys mutex
+malloc()	Allocates memory
+free()	Releases memory
+sleep()	Pauses execution
+
+5. Compile and Run
+gcc philosopher.c -o philosopher -pthread
+./philosopher
+
+
+Main concept: Five philosophers share five forks. Mutex locks control fork usage, and the last philosopher picks up forks in reverse order to prevent deadlock.
